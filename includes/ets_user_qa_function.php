@@ -78,6 +78,16 @@ class ETS_WOO_PRODUCT_USER_QUESTION_ANSWER {
 			);
 			die;
 		}
+        $privacy_policy_enabled = get_option('ets_privacy_policy_enabled') === 'yes';
+        if ($privacy_policy_enabled && empty($_POST['privacy_policy_accepted'])) {
+            echo json_encode(
+                array(
+                    'status'  => 0,
+                    'message' => __( 'Musisz zaakceptować politykę prywatności, aby zadać pytanie.', 'product-questions-answers-for-woocommerce' ) . '.',
+                )
+            );
+            die;
+        }
 
 		$current_user     = wp_get_current_user();
 		$productId        = intval( $_POST['product_id'] );
@@ -167,14 +177,28 @@ class ETS_WOO_PRODUCT_USER_QUESTION_ANSWER {
 		$productQaLength = get_option('ets_product_q_qa_list_length');   
 		$current_user = $user->exists();  
 		$site_url = get_site_url();
+		
+		// Pobierz ustawienia polityki prywatności
+		$privacy_policy_enabled = get_option('ets_privacy_policy_enabled') === 'yes';
+		$privacy_policy_text = get_option('ets_privacy_policy_text', __('Wyrażam zgodę na przetwarzanie moich danych osobowych w celu udzielenia odpowiedzi na zadane pytanie.', 'product-questions-answers-for-woocommerce'));
 
 		if( $current_user == true ){  
 			$uesrName = $user->user_login;
 			$userId = $user->ID; 
 			$uesrEmail = $user->user_email;
 		 	?>
-			<form action="#" method="post"  class="ets-qus-form" name="form">  
-				<textarea id="ques-text-ar" cols="45" rows="3" id="name" class="ets-qa-textarea"   name="question" value="" placeholder="<?php echo __('Enter your question here','product-questions-answers-for-woocommerce') ?>..." height= "75px" ></textarea>
+			<form action="#" method="post" class="ets-qus-form" name="form">  
+				<textarea id="ques-text-ar" cols="45" rows="3" id="name" class="ets-qa-textarea" name="question" value="" placeholder="<?php echo __('Enter your question here','product-questions-answers-for-woocommerce') ?>..." height="75px" ></textarea>
+				
+				<?php if ($privacy_policy_enabled): ?>
+				<div class="ets-privacy-policy-container">
+					<label for="ets-privacy-policy">
+						<input type="checkbox" id="ets-privacy-policy" name="privacy_policy_accepted" value="1" required />
+						<?php echo wp_kses_post($privacy_policy_text); ?>
+					</label>
+				</div>
+				<?php endif; ?>
+				
 				<input type="hidden" class="productId useremail" name="usermail" value="<?php echo $uesrEmail ?>">
 				<input type="hidden" class="productId custId" name="product_id" value="<?php echo $productId ?>">
 				<input type="hidden" class="productlength" name="Product_Qa_Length" value="<?php echo $productQaLength ?>">  
@@ -306,7 +330,19 @@ class ETS_WOO_PRODUCT_USER_QUESTION_ANSWER {
 							<div class="ets-accordion">
 								<span class="que-content"><b><?php echo __( 'Question', 'product-questions-answers-for-woocommerce' ); ?>:</b></span>
 								<span class="que-content-des"><?php echo $value['question']; ?></span>
-								<h6><?php echo $value['user_name'] . '<br>'; ?><?php echo $value['date']; ?></h6>
+								<div class="ets-user-avatar">
+                                    <?php echo get_avatar($value['user_id'], 30); ?>
+                                </div>
+                                <div class="ets-user-name">
+                                    <h6 class="user-name">
+                                    <?php
+                                    echo $value['user_name'];
+                                    ?>
+                                    </h6>
+                                    <div class="ets-question-date">
+                                        <?php echo ( $value['date'] ); ?>
+                                    </div>
+                                </div>
 							</div>
 							<div class="ets-panel">
 							<?php
@@ -345,30 +381,40 @@ class ETS_WOO_PRODUCT_USER_QUESTION_ANSWER {
 						<tbody class="table1 ets-list-table">
 						<?php
 						// Show Question Answer Listing Type Table With Load More
+
 						foreach ( $etsGetQuestion as $key => $value ) {
 
 							?>
 							<tr class="ets-question-top">
 								<td class="ets-question-title"><p><?php echo __( 'Question', 'product-questions-answers-for-woocommerce' ); ?>:</p></td>
 								<td class="ets-question-description"><p><?php echo $value['question']; ?></p></td> 
-								<td class="ets-cont-right"><h6 class="user-name">
-								<?php
-								echo $value['user_name'] . '<br>';
-								echo ( $value['date'] );
-								?>
-								</h6></td>
+								<td class="ets-cont-right">
+									<div class="ets-user-avatar">
+										<?php echo get_avatar($value['user_id'], 30); ?>
+									</div>
+                                    <div class="ets-user-name">
+                                        <h6 class="user-name">
+                                        <?php
+                                        echo $value['user_name'];
+                                        ?>
+                                        </h6>
+                                        <div class="ets-question-date">
+                                            <?php echo ( $value['date'] ); ?>
+                                        </div>
+                                    </div>
+                                </td>
 							</tr>
 							<?php
 							if ( ! empty( $value['answer'] ) ) {
 								?>
-								<tr>
+								<tr class="ets-answer-row">
 									<td class="ets-question-title"><p><?php echo __( 'Answer', 'product-questions-answers-for-woocommerce' ); ?>:</p></td>
-									<td colspan="2"><p> <?php echo $value['answer']; ?></p></td> 
+									<td colspan="2" class="ets-answer-content"><p> <?php echo $value['answer']; ?></p></td> 
 								</tr> 
 								<?php
 							} else {
 								?>
-								<tr>
+								<tr class="ets-answer-row">
 									<td class="ets-question-title"><p><?php echo __( 'Answer:', 'product-questions-answers-for-woocommerce' ); ?></p></td>
 									<td colspan="2" class="ets-no-answer" ><h6><p><i><?php echo __( 'Answer awaiting', 'product-questions-answers-for-woocommerce' ); ?>...</i></p></h6></td>	
 								</tr> 
@@ -386,8 +432,10 @@ class ETS_WOO_PRODUCT_USER_QUESTION_ANSWER {
 						<?php
 				}
 				?>
-					  
-				<button type="submit" id="ets-load-more" class="btn btn-success ets-qa-load-more" name="ets_load_more" value=""><?php echo $loadMoreButtonName; ?></button>
+				
+				<?php if ($keyData > $productQaLength): ?>
+                    <button type="submit" id="ets-load-more" class="btn btn-success ets-qa-load-more" name="ets_load_more" value=""><?php echo $loadMoreButtonName; ?></button>
+                <?php endif; ?>
 				<div class="ets_pro_qa_length"><p hidden><?php echo $keyData; ?></p></div><div id="ets_product_qa_length"><p></p></div>
 	
 				<?php
@@ -405,12 +453,19 @@ class ETS_WOO_PRODUCT_USER_QUESTION_ANSWER {
 					<tr class="ets-question-top">
 							<td class="ets-question-title"><p><?php echo __( 'Question', 'product-questions-answers-for-woocommerce' ); ?>:</p></td>
 							<td class="ets-question-description"><p><?php echo $value['question']; ?></p></td> 
-							<td class="ets-cont-right"><h6 class="user-name">
-							<?php
-							echo $value['user_name'] . '<br>';
-							echo ( $value['date'] );
-							?>
-							</h6></td>
+							<td class="ets-cont-right"><div class="ets-user-avatar">
+                                <?php echo get_avatar($value['user_id'], 30); ?>
+                            </div>
+                            <div class="ets-user-name">
+                                <h6 class="user-name">
+                                <?php
+                                echo $value['user_name'];
+                                ?>
+                                </h6>
+                                <div class="ets-question-date">
+                                    <?php echo ( $value['date'] ); ?>
+                                </div>
+                            </div></td>
 					</tr>
 
 					<?php
@@ -533,7 +588,19 @@ class ETS_WOO_PRODUCT_USER_QUESTION_ANSWER {
 					<div class="ets-accordion">
 						<span class="que-content ans-content"><b><?php echo __( 'Question', 'product-questions-answers-for-woocommerce' ); ?>:</b></span>
 						<span class="que-content-des"><?php echo $value['question']; ?></span>
-						<h6><?php echo $value['user_name'] . '<br>'; ?><?php echo $value['date']; ?></h6>
+						<div class="ets-user-avatar">
+                            <?php echo get_avatar($value['user_id'], 30); ?>
+                        </div>
+                        <div class="ets-user-name">
+                            <h6 class="user-name">
+                            <?php
+                            echo $value['user_name'];
+                            ?>
+                            </h6>
+                            <div class="ets-question-date">
+                                <?php echo ( $value['date'] ); ?>
+                            </div>
+                        </div>
 					</div>
 					<div class="ets-panel">
 						<?php
@@ -578,12 +645,20 @@ class ETS_WOO_PRODUCT_USER_QUESTION_ANSWER {
 					<tr class="ets-question-top">
 						<td class="ets-question-title"><p><?php echo __( 'Question', 'product-questions-answers-for-woocommerce' ); ?>.</p></td>
 						<td class="ets-question-description"><p><?php echo $value['question']; ?></p></td> 
-						<td class="ets-cont-right"><h6 class="user-name">
-						<?php
-						echo $value['user_name'] . '<br>';
-							echo ( $value['date'] );
-						?>
-							</h6>
+						<td class="ets-cont-right">
+                            <div class="ets-user-avatar">
+                                <?php echo get_avatar($value['user_id'], 30); ?>
+                            </div>
+                            <div class="ets-user-name">
+                                <h6 class="user-name">
+                                <?php
+                                echo $value['user_name'];
+                                ?>
+                                </h6>
+                                <div class="ets-question-date">
+                                    <?php echo ( $value['date'] ); ?>
+                                </div>
+                            </div>
 						 </td>
 					</tr>
 					<?php

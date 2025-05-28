@@ -270,3 +270,40 @@
     display: inline-block;
     color: #d45f56;
 }
+/* Dodaj do ets_woo_qa_style.css */
+.ets-qa-user-info {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+.ets-qa-avatar {
+    margin-right: 10px;
+}
+.ets-user-avatar img {
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+}
+.ets-qa-username {
+    font-weight: bold;
+}
+.ets-question-date {
+    font-weight: bold;
+    font-size: 12px;
+}
+
+.ets-privacy-policy-container {
+    padding: 15px 0;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.ets-privacy-policy-container input[type="checkbox"] {
+    margin-right: 8px;
+    vertical-align: middle;
+}
+.ets-privacy-policy-container label {
+    display: flex;
+    /* gap: 10px; */
+    margin-bottom: 10px;
+}

@@ -71,6 +71,9 @@ class ETS_WOO_PRODUCT_ADMIN_QUESTION_ANSWER
 			update_option( 'ets_product_q_qa_list_length', '10' );
 			update_option( 'ets_load_more_button_name', __("Load More",'product-questions-answers-for-woocommerce') );
 			update_option( 'ets_product_qa_paging_type', "normal" );
+			// Inicjalizacja opcji polityki prywatności
+			update_option( 'ets_privacy_policy_enabled', 'no' );
+			update_option( 'ets_privacy_policy_text', __('Wyrażam zgodę na przetwarzanie moich danych osobowych w celu udzielenia odpowiedzi na zadane pytanie.', 'product-questions-answers-for-woocommerce') );
 			$loadButton = get_option( 'ets_load_more_button' );
 
 		}
@@ -82,6 +85,15 @@ class ETS_WOO_PRODUCT_ADMIN_QUESTION_ANSWER
 		if (isset($_POST['ets_load_more'])) {
 			$adminApprove = isset($_POST['ets_qa_approve']) ? 'yes' : 'no' ;
 			update_option( 'ets_qa_approve', $adminApprove );
+			
+			// Obsługa zapisywania opcji polityki prywatności
+			$privacy_policy_enabled = isset($_POST['ets_privacy_policy_enabled']) ? 'yes' : 'no';
+			update_option('ets_privacy_policy_enabled', $privacy_policy_enabled);
+			
+			if (isset($_POST['ets_privacy_policy_text'])) {
+				$privacy_policy_text = sanitize_textarea_field($_POST['ets_privacy_policy_text']);
+				update_option('ets_privacy_policy_text', $privacy_policy_text);
+			}
 			
 			if(!isset($_POST['ets_load_more_button']) || (!wp_verify_nonce($_POST['ets_load_more_button'] , 'etsLoadMoreQa' ))){
 			 	 
@@ -158,9 +170,24 @@ class ETS_WOO_PRODUCT_ADMIN_QUESTION_ANSWER
 					<td><h4><?php echo __('Auto Approve','product-questions-answers-for-woocommerce'); ?>: </h4></td>
 					<td><input type="checkbox" name="ets_qa_approve" value="yes" <?php if(isset($aprValue) && $aprValue == 'yes'){ echo "checked"; } else { '' ; }?>></td>
 				</tr> 
+                <tr>
+                    <th ><h4><?php echo __('Włącz politykę prywatności', 'product-questions-answers-for-woocommerce'); ?></h4></th>
+                    <td>
+                        <input type="checkbox" id="ets_privacy_policy_enabled" name="ets_privacy_policy_enabled" value="yes" <?php checked(get_option('ets_privacy_policy_enabled'), 'yes'); ?> />
+                        <label for="ets_privacy_policy_enabled"><?php echo __('Wymagaj od użytkowników akceptacji polityki prywatności przed dodaniem pytania', 'product-questions-answers-for-woocommerce'); ?></label>
+                    </td>
+                </tr>
+                <tr>
+                    <th><h4><?php echo __('Tekst polityki prywatności', 'product-questions-answers-for-woocommerce'); ?></h4></th>
+                    <td>
+                        <textarea id="ets_privacy_policy_text" name="ets_privacy_policy_text" rows="4" cols="50" class="large-text"><?php echo esc_textarea(get_option('ets_privacy_policy_text', __('Wyrażam zgodę na przetwarzanie moich danych osobowych w celu udzielenia odpowiedzi na zadane pytanie.', 'product-questions-answers-for-woocommerce'))); ?></textarea>
+                        <p class="description"><?php echo __('Wprowadź tekst zgody, który będzie wyświetlany obok pola wyboru.', 'product-questions-answers-for-woocommerce'); ?></p>
+                    </td>
+                </tr>
 				<tr><td></td>
-					<td><button type="submit" name="ets_load_more" class="button button-primary button-large"><?php echo __('Submit',"product-questions-answers-for-woocommerce"); ?></button>
+					<td><button type="submit" name="ets_load_more" class="button button-primary button-large"><?php echo __('Save',"product-questions-answers-for-woocommerce"); ?></button>
 				</tr>
+
 			</table>
 		</form> 
 
@@ -671,4 +698,4 @@ class ETS_WOO_PRODUCT_ADMIN_QUESTION_ANSWER
 		die;  
 	} 
 }
-$etsWooProductAdminQuestionAnswer = new ETS_WOO_PRODUCT_ADMIN_QUESTION_ANSWER(); 
+$etsWooProductAdminQuestionAnswer = new ETS_WOO_PRODUCT_ADMIN_QUESTION_ANSWER();
